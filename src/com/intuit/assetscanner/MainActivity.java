@@ -28,12 +28,17 @@ import android.widget.TextView;
 
 public class MainActivity extends Activity {
 	
-	protected Button _button;
-	protected ImageView _image;
-	protected TextView _field;
-	protected String _dir;
-	protected String _path;
-	protected boolean _taken;
+//	protected Button _button;
+	public static Button _button;
+	public static ImageView _image;
+	public static TextView _field;
+	public static TextView _field1;
+	
+	public static String _dir;
+	public static String _path;
+	public static int _filename_cnt;
+	public boolean _taken;
+	public static String recognizedText = "Initial value";
 	public static final String lang = "eng";
 	public static final String DATA_PATH = Environment.getExternalStorageDirectory() + "/AssetScanner/tesseract/";
 	public static Bitmap bitmap;
@@ -48,10 +53,12 @@ public class MainActivity extends Activity {
 		
         _image = ( ImageView ) findViewById( R.id.image );
         _field = ( TextView ) findViewById( R.id.field );
+        _field1 = ( TextView ) findViewById( R.id.field1 );
+        _field.setText("OCR Results will show here");
         _button = ( Button ) findViewById( R.id.button );
         _button.setOnClickListener( new ButtonClickHandler() );
         
-        _path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/make_machine_example.jpg";
+        _path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/pic" + _filename_cnt;
         
 		if (!(new File(DATA_PATH + "tessdata/" + lang + ".traineddata")).exists()) {
 			try {
@@ -75,7 +82,7 @@ public class MainActivity extends Activity {
 				//gin.close();
 				out.close();
 
-				Log.v(TAG, "Copied " + lang + " traineddata");
+				Log.v(TAG, "Copied " + lang + " traineddata to " + myLocation );
 			} catch (IOException e) {
 				Log.e(TAG, "Was unable to copy " + lang + " traineddata " + e.toString());
 			}
@@ -95,11 +102,14 @@ public class MainActivity extends Activity {
     	public void onClick( View view ){
     		Log.i("MakeMachine", "ButtonClickHandler.onClick()" );
     		startCameraActivity();
+    		_field1.setText("ButtonClickHandler");
     	}
     }
     
     protected void startCameraActivity()
     {
+        _filename_cnt++;
+    	_path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/pic" + _filename_cnt;
     	Log.i("MakeMachine", "startCameraActivity()" );
     	File file = new File( _path );
     	Uri outputFileUri = Uri.fromFile( file );
@@ -108,6 +118,7 @@ public class MainActivity extends Activity {
     	intent.putExtra( MediaStore.EXTRA_OUTPUT, outputFileUri );
     	
     	startActivityForResult( intent, 0 );
+        _field1.setText("startCameraActivity");
     }
     
     @Override
@@ -124,10 +135,12 @@ public class MainActivity extends Activity {
     			onPhotoTaken();
     			break;
     	}
+        _field1.setText("onActivityResult");
     }
     
     protected void onPhotoTaken()
     {
+
     	Log.i( "MakeMachine", "onPhotoTaken" );
     	
     	_taken = true;
@@ -139,7 +152,7 @@ public class MainActivity extends Activity {
     	
     	_image.setImageBitmap(bitmap);
     	
-    	_field.setVisibility( View.GONE );
+//    	_field.setVisibility( View.GONE );
     	
         ExifInterface exif;
   		try {
@@ -182,28 +195,25 @@ public class MainActivity extends Activity {
   		    baseApi.setImage(bitmap);
   		    String recognizedText = baseApi.getUTF8Text();
   		    baseApi.end();
-  		    
-  			Log.v(TAG, "OCRED TEXT: " + recognizedText);
 
   			if ( lang.equalsIgnoreCase("eng") ) {
   				recognizedText = recognizedText.replaceAll("[^a-zA-Z0-9]+", " ");
   			}
 
+  			Log.v(TAG, "OCRED TEXT: " + recognizedText);
+  			
   			recognizedText = recognizedText.trim();
 
   			if ( recognizedText.length() != 0 ) {
-  				_field.setText(_field.getText().toString().length() == 0 ? recognizedText : _field.getText() + " " + recognizedText);
-//  				_field.setSelection(_field.getText().toString().length());
+  				_field.setText(recognizedText);
+// 				_field.setSelection(_field.getText().toString().length());
   			}
-  		    
-  		    System.out.println(recognizedText);
-  		    
-  		    _field.setText(recognizedText);
-  		    
+  		      		      		    
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+  		_field1.setText("onPhotoTaken");
     }
     
     @Override 
@@ -212,11 +222,13 @@ public class MainActivity extends Activity {
     	if( savedInstanceState.getBoolean( MainActivity.PHOTO_TAKEN ) ) {
     		onPhotoTaken();
     	}
+    	_field1.setText("onRestoreInstanceState");
     }
     
     @Override
     protected void onSaveInstanceState( Bundle outState ) {
     	outState.putBoolean( MainActivity.PHOTO_TAKEN, _taken );
+    	_field1.setText("onSaveInstanceState");
     }
 
 
